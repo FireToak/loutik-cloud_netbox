@@ -1,0 +1,50 @@
+services:
+  netbox:
+    image: lscr.io/linuxserver/netbox:4.5.9
+    container_name: netbox
+    restart: always
+    env_file: .env
+    volumes:
+      - netbox-config:/config
+      - netbox-media:/app/netbox/netbox/media
+    ports:
+      - "8000:8000"
+    networks:
+      - netbox-internal
+    depends_on:
+      netbox-db:
+        condition: service_healthy
+
+  netbox-db:
+    image: postgres:15-alpine
+    container_name: netbox-db
+    restart: always
+    env_file: .env
+    volumes:
+      - netbox-db-data:/var/lib/postgresql/data
+    networks:
+      - netbox-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  netbox-redis:
+    image: redis:7-alpine
+    container_name: netbox-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - netbox-redis-data:/data
+    networks:
+      - netbox-internal
+
+volumes:
+  netbox-config:
+  netbox-media:
+  netbox-db-data:
+  netbox-redis-data:
+
+networks:
+  netbox-internal:
+    driver: bridge
