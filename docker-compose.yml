@@ -33,6 +33,7 @@ services:
   netbox-redis:
     image: redis:7-alpine
     container_name: netbox-redis
+    restart: always
     command: redis-server --appendonly yes
     volumes:
       - netbox-redis-data:/data
